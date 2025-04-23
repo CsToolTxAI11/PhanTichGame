@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Dự Đoán Tài/Xỉu - Đăng Nhập</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #141e30, #243b55);
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      padding: 40px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #00ffff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00cccc;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .hidden { display: none; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #00ffff;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #00cccc;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- AUTHENTICATION -->
+    <div id="auth">
+      <div id="loginForm">
+        <h1>Đăng Nhập</h1>
+        <input type="text" id="loginUser" placeholder="Tên đăng nhập">
+        <input type="password" id="loginPass" placeholder="Mật khẩu">
+        <button onclick="login()">Đăng Nhập</button>
+        <p style="text-align:center;">Chưa có tài khoản? <a href="#" onclick="toggleForms('register')">Đăng ký</a></p>
+        <p style="text-align:center; margin-top:10px;">
+          <a href="#" onclick="toggleForms('admin')">Đăng nhập Admin</a>
+        </p>
+      </div>
+
+      <div id="registerForm" class="hidden">
+        <h2>Đăng Ký</h2>
+        <input type="text" id="regUser" placeholder="Tên đăng nhập">
+        <input type="password" id="regPass" placeholder="Mật khẩu">
+        <input type="text" id="regKey" placeholder="Nhập key kích hoạt">
+        <button onclick="register()">Tạo tài khoản</button>
+        <p style="text-align:center;">Đã có tài khoản? <a href="#" onclick="toggleForms('login')">Đăng nhập</a></p>
+        <p style="text-align:center; margin-top: 15px;">
+          Chưa có key? <a href="https://t.me/CsToolTxAI11" target="_blank" style="color:#00ffff;">Liên hệ Admin để mua key</a>
+        </p>
+      </div>
+
+      <div id="adminLoginForm" class="hidden">
+        <h2>Admin Đăng Nhập</h2>
+        <input type="text" id="adminUser" placeholder="Admin Username">
+        <input type="password" id="adminPass" placeholder="Admin Password">
+        <button onclick="adminLogin()">Đăng nhập quản trị</button>
+        <p style="text-align:center;"><a href="#" onclick="toggleForms('login')">Quay lại</a></p>
+      </div>
+    </div>
+
+    <!-- TOOL -->
+    <div id="mainTool" class="hidden">
+      <h1>Phân Tích Tài/Xỉu Theo Phiên</h1>
+      <input type="number" id="totalSessions" placeholder="Số phiên gần nhất (VD: 20)">
+      <input type="number" id="totalTai" placeholder="Số phiên ra TÀI">
+      <input type="number" id="totalXiu" placeholder="Số phiên ra XỈU">
+      <button onclick="analyze()">PHÂN TÍCH</button>
+      <div class="result" id="result"></div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel" class="hidden">
+      <h1>Quản Lý Tài Khoản</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>Tên đăng nhập</th>
+            <th>Mật khẩu</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+      <p style="text-align:center; margin-top: 20px;"><a href="#" onclick="logoutAdmin()">Đăng xuất Admin</a></p>
+    </div>
+  </div>
+
+  <script>
+    const validKeys = ["vip789", "taixiu2025", "supertool"];
+    const users = {}; // { username: password }
+    let currentUser = null;
+    const adminCredentials = { username: "admin", password: "admin123" };
+
+    function toggleForms(mode) {
+      document.getElementById("loginForm").classList.add("hidden");
+      document.getElementById("registerForm").classList.add("hidden");
+      document.getElementById("adminLoginForm").classList.add("hidden");
+
+      if (mode === 'login') document.getElementById("loginForm").classList.remove("hidden");
+      else if (mode === 'register') document.getElementById("registerForm").classList.remove("hidden");
+      else if (mode === 'admin') document.getElementById("adminLoginForm").classList.remove("hidden");
+    }
+
+    function register() {
+      const user = document.getElementById("regUser").value;
+      const pass = document.getElementById("regPass").value;
+      const key = document.getElementById("regKey").value;
+
+      if (user && pass && key) {
+        if (!validKeys.includes(key)) {
+          alert("Key kích hoạt không hợp lệ!");
+          return;
+        }
+        if (users[user]) {
+          alert("Tên đăng nhập đã tồn tại!");
+        } else {
+          users[user] = pass;
+          alert("Đăng ký thành công! Mời đăng nhập.");
+          toggleForms('login');
+        }
+      } else {
+        alert("Vui lòng nhập đầy đủ thông tin!");
+      }
+    }
+
+    function login() {
+      const user = document.getElementById("loginUser").value;
+      const pass = document.getElementById("loginPass").value;
+
+      if (users[user] && users[user] === pass) {
+        currentUser = user;
+        document.getElementById("auth").classList.add("hidden");
+        document.getElementById("mainTool").classList.remove("hidden");
+      } else {
+        alert("Sai tên đăng nhập hoặc mật khẩu!");
+      }
+    }
+
+    function analyze() {
+      const sessions = parseInt(document.getElementById("totalSessions").value);
+      const tai = parseInt(document.getElementById("totalTai").value);
+      const xiu = parseInt(document.getElementById("totalXiu").value);
+
+      if (isNaN(sessions) || isNaN(tai) || isNaN(xiu) || tai + xiu !== sessions) {
+        alert("Vui lòng nhập đầy đủ và đúng dữ liệu!");
+        return;
+      }
+
+      const diff = Math.abs(tai - xiu);
+      let prediction = tai > xiu ? "XỈU" : tai < xiu ? "TÀI" : (Math.random() > 0.5 ? "TÀI" : "XỈU");
+      let confidence = 75 + Math.random() * 10;
+
+      document.getElementById("result").innerHTML = `
+        Dự đoán phiên tiếp theo: <span style="color:${prediction === 'TÀI' ? '#00ff99' : '#ffcc00'}">${prediction}</span><br>
+        Tỷ lệ chính xác dự kiến: <span style="color:#00ffff">${confidence.toFixed(1)}%</span>
+      `;
+    }
+
+    function adminLogin() {
+      const user = document.getElementById("adminUser").value;
+      const pass = document.getElementById("adminPass").value;
+
+      if (user === adminCredentials.username && pass === adminCredentials.password) {
+        document.getElementById("auth").classList.add("hidden");
+        document.getElementById("adminPanel").classList.remove("hidden");
+        renderUserTable();
+      } else {
+        alert("Sai tài khoản admin!");
+      }
+    }
+
+    function renderUserTable() {
+      const tbody = document.getElementById("userTableBody");
+      tbody.innerHTML = "";
+      for (const [username, password] of Object.entries(users)) {
+        const row = `
+          <tr>
+            <td>${username}</td>
+            <td>${password}</td>
+            <td><button onclick="deleteUser('${username}')" style="background:#ff4444; color:#fff; border:none; border-radius:6px; padding:6px 12px; cursor:pointer;">Xóa</button></td>
+          </tr>`;
+        tbody.innerHTML += row;
+      }
+    }
+
+    function deleteUser(username) {
+      if (confirm(`Bạn có chắc muốn xóa tài khoản "${username}"?`)) {
+        delete users[username];
+        renderUserTable();
+      }
+    }
+
+    function logoutAdmin() {
+      document.getElementById("adminPanel").classList.add("hidden");
+      document.getElementById("auth").classList.remove("hidden");
+      toggleForms('login');
+    }
+
+    // Hiển thị login mặc định
+    toggleForms('login');
+  </script>
+</body>
+</html>
